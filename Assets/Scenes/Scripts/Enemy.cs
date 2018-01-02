@@ -19,10 +19,6 @@ public class Enemy : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        if (health <= 0f) {
-            print("died");
-            Destroy(gameObject);
-        }
 	}
 
     public int Health { set { health = value; changeHealthText(value); } get { return health; }}
@@ -30,4 +26,12 @@ public class Enemy : MonoBehaviour {
     private void changeHealthText(int newHealth) {
         healthText.text = newHealth.ToString() + "/" + maxHealth.ToString();
     }
+
+	public void DecreaseHealth(int amount){
+		Health -= amount;
+		if (health <= 0f) {
+			print(gameObject.name + " got killed");
+			Destroy(gameObject);
+		}
+	}
 }

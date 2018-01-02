@@ -19,8 +19,7 @@ public class MainCamera : MonoBehaviour {
 
 	}
 
-    void FollowPlayer() {
-        //targetPlayerDist = player.transform.position - (transform.position - distFromTarget);
-        transform.position = Vector3.Lerp(transform.position, player.transform.position + distFromTarget, moveSpeed * Time.deltaTime);
-    } //should follow player smoothly, should catch up faster when far away from player
+	void FollowPlayer() {//should follow player smoothly, should catch up faster when far away from player
+		transform.position += (player.transform.position + distFromTarget - transform.position)*moveSpeed/2*Time.deltaTime;
+    } 
 }

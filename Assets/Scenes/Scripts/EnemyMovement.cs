@@ -21,9 +21,7 @@ public class EnemyMovement : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-
         CheckChase();
-        
 	}
 
     void CheckChase()
@@ -42,7 +40,6 @@ public class EnemyMovement : MonoBehaviour {
         else
         {
             StopChase();
-
         }
     }
 
@@ -51,6 +48,7 @@ public class EnemyMovement : MonoBehaviour {
         pathFinder.isStopped = true;
         pathFinder.SetDestination(transform.position);
     }
+
     void Chase(Vector3 target)
     {
         pathFinder.SetDestination(target);
