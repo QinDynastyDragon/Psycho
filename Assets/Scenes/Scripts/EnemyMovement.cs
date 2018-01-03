@@ -10,20 +10,23 @@ public class EnemyMovement : MonoBehaviour {
     public Player targetPlayer;
     private CapsuleCollider capsCol;
     private float provocRange = 10;
- 
-  
+
+    private Enemy self;
+
 	// Use this for initialization
 	void Start () {
         pathFinder = GetComponent<NavMeshAgent>();
         //targetPlayer = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
-        capsCol = GetComponent<CapsuleCollider>();    
+        //capsCol = GetComponent<CapsuleCollider>();
+
+        self = GetComponent<Enemy>();
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
-
-        CheckChase();
-        
+		if (!self.isStunned) {
+			CheckChase ();
+		}
 	}
 
     void CheckChase()
@@ -31,7 +34,7 @@ public class EnemyMovement : MonoBehaviour {
         Vector3 pos = transform.position;
         Vector3 targetPos = targetPlayer.transform.position;
 
-        if ((pos - targetPos).magnitude <= capsCol.radius + targetPlayer.GetCapsCol().radius)
+		if ((pos - targetPos).magnitude <= transform.localScale.x/2 + targetPlayer.transform.localScale.x/2)
         {
             StopChase();
         }
@@ -42,7 +45,6 @@ public class EnemyMovement : MonoBehaviour {
         else
         {
             StopChase();
-
         }
     }
 
@@ -51,6 +53,7 @@ public class EnemyMovement : MonoBehaviour {
         pathFinder.isStopped = true;
         pathFinder.SetDestination(transform.position);
     }
+
     void Chase(Vector3 target)
     {
         pathFinder.SetDestination(target);
