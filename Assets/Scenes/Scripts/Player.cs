@@ -18,12 +18,9 @@ public class Player : MonoBehaviour {
     private float moveSpeed = 5f;
     private Vector3 moveDir;
 
-
-
     public GameObject afterShadowCloneOfDash;
 
     private float gravity = .3f;
-
 
     private CapsuleCollider capsCol;
     private CharacterController charCtrl;
