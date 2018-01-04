@@ -9,9 +9,8 @@ public class Enemy : MonoBehaviour {
     public float moveSpeed = 5;
     private int health;
     private Vector3 knockBackForce = Vector3.zero;
-    private float knockBackLightness = 0.1f;
+    private float knockBackLightness = 0.3f;
 
-	public Camera camera;
 
     public Text healthText;
 	public Canvas canvas;
@@ -30,7 +29,7 @@ public class Enemy : MonoBehaviour {
 		enemyMovement = GetComponent<EnemyMovement> ();
 
         health = maxHealth;
-		canvas.transform.LookAt (-camera.transform.position);
+		canvas.transform.LookAt (-Camera.main.transform.position);
 		canvasOriRotation = canvas.transform.rotation;
     }
 
@@ -84,7 +83,7 @@ public class Enemy : MonoBehaviour {
 		if (knockBackForce.magnitude > 0.01f) {
 			isStunned = true;
 			transform.position += knockBackForce;
-			knockBackForce *= 0.95f;
+			knockBackForce *= 0.85f;
 		} else {
 			knockBackForce = Vector3.zero;
 			isStunned = false;

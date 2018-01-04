@@ -2,27 +2,28 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(CharacterController))]
 public class Player : MonoBehaviour {
+	private float dashLength = 6f;   //the max length on each dash
+	private float dashDuration = 0.5f; //time to spend on each dash
+	private float dashDamage = 30;
+	private float dashCoolDown = 0.7f;
+	private float dashTimeSpent = 0f; //time it spent on current dash
+	private float lastDashTime;
+	private Vector3 dashStartPos;
+	private Vector3 dashTargetPos;
+	private bool isDashGliding = false;
+	private HashSet<Enemy> dashDamagedEnemies = new HashSet<Enemy> ();
 
-    private float dashLength = 6f;   //the max length on each dash
-    private float dashDuration = 0.5f; //time to spend on each dash
-    private float dashDamage = 30;
-    private float dashCoolDown = 0.7f;
-    private float dashTimeSpent = 0f; //time it spent on current dash
-    private float lastDashTime;
-    private Vector3 dashStartPos;
-    private Vector3 dashTargetPos;
-    private bool isDashGliding = false;
-    private bool isControllable = true;
+	private bool isControllable = true;
 
-    private float moveSpeed = 5f;
+	private float moveSpeed = 4f; //for moving with mouseHold
     private Vector3 moveDir;
-
+    
     public GameObject afterShadowCloneOfDash;
 
     private float gravity = .3f;
 
-    private CapsuleCollider capsCol;
     private CharacterController charCtrl;
 
     void Start () {
@@ -47,17 +48,19 @@ public class Player : MonoBehaviour {
         }
     }
 
-    public void OnMouseHold(){
-        transform.LookAt(MouseToPlayerHorPlanePos() + Vector3.up * charCtrl.height / 2);
-        if(isControllable){
-            charCtrl.Move((MouseToPlayerHorPlanePos()+Vector3.up * charCtrl.height / 2 - transform.position).normalized*moveSpeed*Time.deltaTime);
-        }
-    }
-
-    public void IsSwiped(Vector3 dir){ //is called once when user swipes
-        if (isControllable)
-            StartDashing(SwipeDirToDashDir(dir));
-    }
+	public void OnSwipe(Vector3 dir){ // is called once when user swipes
+		print("Swiped");
+		if (isControllable)
+			StartDashing(SwipeDirToDashDir(dir));
+	}
+	public void OnMouseHold(){
+		transform.LookAt (MouseToPlayerHorPlanePos ()+Vector3.up * charCtrl.height / 2);
+		if(isControllable){
+			charCtrl.Move((MouseToPlayerHorPlanePos() + Vector3.up * charCtrl.height / 2 - transform.position).normalized*moveSpeed*Time.deltaTime);
+		}
+		//MouseToPlayerHorPlanePos()
+	}
+		
 
     private Vector3 SwipeDirToDashDir(Vector2 swipeDir){
         return new Vector3(swipeDir.x, 0, swipeDir.y);
@@ -101,33 +104,30 @@ public class Player : MonoBehaviour {
     private void StopDashGliding(){
         isControllable = true;
         isDashGliding = false;
-        dashTimeSpent = 0;
+		dashTimeSpent = 0;
+		dashDamagedEnemies.Clear ();
+		//print ("done dashing");
     }
 
-
-    void OnTriggerEnter(Collider other){
-        var enemy = other.gameObject.GetComponent<Enemy> ();
-        if (enemy != null)
-        {
-            if (isDashGliding)
-            {
-                InflictDamage(enemy);
-                enemy.KnockBack((dashTargetPos - dashStartPos).normalized);
-            }
-        }
+    void OnTriggerEnter(Collider other)
+    {
+		var enemy = other.gameObject.GetComponent<Enemy> ();
+		if (enemy != null) {
+			if (Vector3.Angle (dashTargetPos - dashStartPos, enemy.transform.position - transform.position) <= 90) {
+				if (IsDashing ()) {
+					if (!dashDamagedEnemies.Contains (enemy)) {
+						dashDamagedEnemies.Add (enemy);
+						InflictDamage (enemy);
+						enemy.KnockBack((dashTargetPos - dashStartPos).normalized);
+						print ("Player dashed through " + other.name);
+					}
+				}
+			}
+		}
     }
 
     private void InflictDamage(Enemy target) {
         target.DecreaseHealth ((int)dashDamage);
-    }
-
-
-    private Vector3 GetMoveDir()
-    {
-        Vector3 pos = transform.position;
-        Vector3 hitPoint = MouseToPlayerHorPlanePos();
-        Vector3 moveTarget = new Vector3(hitPoint.x, pos.y, hitPoint.z);
-        return (moveTarget - pos).normalized;
     }
 
     private Vector3 MouseToPlayerHorPlanePos()
@@ -145,11 +145,13 @@ public class Player : MonoBehaviour {
         }
         return hitPoint;
     }
-    private void Move()
+
+    public CharacterController GetCol()
     {
-        moveDir = GetMoveDir();
-        charCtrl.Move(moveDir * moveSpeed);
-        transform.LookAt(transform.position + moveDir);
+		return GetComponent<CharacterController> ();
     }
 
+	public bool IsDashing(){
+		return isDashGliding;
+	}
 }
