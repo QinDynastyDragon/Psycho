@@ -21,28 +21,30 @@ public class Player : MonoBehaviour {
     private Vector3 moveDir;
     
     public GameObject afterShadowCloneOfDash;
-    
+
     private float gravity = .3f;
 
     private CharacterController charCtrl;
 
-    // Use this for initialization
     void Start () {
         charCtrl = GetComponent<CharacterController>();
-	}
-	
-	// Update is called once per frame
-	void Update () {
+    }
+
+    void Update () {
         if (isDashGliding)
         {
-            DashGliding(); // glide till it stops 
+            DashGliding(); // glide until it stops
         }
         if (!charCtrl.isGrounded) {
-            charCtrl.Move(Vector3.down * gravity); //WRONG%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            charCtrl.Move(Vector3.down * gravity); //wrong!
         }
         if (Input.GetKeyDown(KeyCode.Space)) {
             InstantiateAfterShadow();
-			StartDashing((MouseToPlayerHorPlanePos() + Vector3.up * charCtrl.height / 2 - transform.position).normalized);
+            StartDashing((MouseToPlayerHorPlanePos() + Vector3.up * charCtrl.height / 2 - transform.position).normalized);
+        }
+
+        if (Input.GetMouseButton(0)){
+            OnMouseHold();
         }
     }
 
@@ -60,52 +62,47 @@ public class Player : MonoBehaviour {
 	}
 		
 
-
-    private Vector3 SwipeDirToDashDir(Vector2 swipeDir)
-    {
+    private Vector3 SwipeDirToDashDir(Vector2 swipeDir){
         return new Vector3(swipeDir.x, 0, swipeDir.y);
     }
 
-    private void InstantiateAfterShadow()
-    {
+    private void InstantiateAfterShadow(){
         var instantiatedShadowToBeDeleted = Instantiate(afterShadowCloneOfDash, transform.position, transform.rotation);
         Destroy(instantiatedShadowToBeDeleted, 0.3f);
     }
 
     private void StartDashing(Vector3 direction) {
-		//assumes that the direction is normalized
-		if (lastDashTime + dashCoolDown > Time.time) { //if dash not ready
-			//print("dash not ready");
-			return;
-		}
+        //assumes that the direction is normalized
+        if (lastDashTime + dashCoolDown > Time.time) { //if dash not ready
+            //print("dash not ready");
+            return;
+        }
         isDashGliding = true;
         lastDashTime = Time.time;
         isControllable = false;
 
         dashStartPos = transform.position;
-		dashTargetPos = dashStartPos + direction * dashLength;
-		transform.LookAt(dashTargetPos);
+        dashTargetPos = dashStartPos + direction * dashLength;
+        transform.LookAt(dashTargetPos);
     }
 
-    private void DashGliding()
-    {
+    private void DashGliding(){
         Vector3 pos = transform.position;
-		Vector3 toTarget = dashTargetPos - dashStartPos;
-		if (dashTimeSpent >= dashDuration){
+        Vector3 toTarget = dashTargetPos - dashStartPos;
+        if (dashTimeSpent >= dashDuration){
             StopDashGliding();
-			return;
+            return;
         }
-		dashTimeSpent += Time.deltaTime;
-		if (dashDuration > dashTimeSpent) {
-			charCtrl.Move (toTarget * Time.deltaTime / dashDuration);
-		} else {
-			charCtrl.Move (toTarget * (dashTimeSpent - dashDuration) / dashDuration);
-		}
+        dashTimeSpent += Time.deltaTime;
+        if (dashDuration > dashTimeSpent) {
+            charCtrl.Move (toTarget * Time.deltaTime / dashDuration);
+        } else {
+            charCtrl.Move (toTarget * (dashTimeSpent - dashDuration) / dashDuration);
+        }
     }
 
-    private void StopDashGliding()
-    {
-		isControllable = true;
+    private void StopDashGliding(){
+        isControllable = true;
         isDashGliding = false;
 		dashTimeSpent = 0;
 		dashDamagedEnemies.Clear ();
@@ -121,6 +118,7 @@ public class Player : MonoBehaviour {
 					if (!dashDamagedEnemies.Contains (enemy)) {
 						dashDamagedEnemies.Add (enemy);
 						InflictDamage (enemy);
+						enemy.KnockBack((dashTargetPos - dashStartPos).normalized);
 						print ("Player dashed through " + other.name);
 					}
 				}
@@ -129,10 +127,9 @@ public class Player : MonoBehaviour {
     }
 
     private void InflictDamage(Enemy target) {
-		target.DecreaseHealth ((int)dashDamage);
+        target.DecreaseHealth ((int)dashDamage);
     }
 
-   
     private Vector3 MouseToPlayerHorPlanePos()
     {
         Vector3 hitPoint = Vector3.zero;

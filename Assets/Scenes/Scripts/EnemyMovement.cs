@@ -5,12 +5,10 @@ using UnityEngine.AI;
 
 public class EnemyMovement : MonoBehaviour {
 
-
     private NavMeshAgent pathFinder;
     public Player player;
     private CapsuleCollider capsCol;
     private float provocRange = 10;
-	private Vector3 shouldBePosition;
  
   
 	// Use this for initialization
@@ -30,28 +28,16 @@ public class EnemyMovement : MonoBehaviour {
         //CheckChase();
 	}
 
-    void StopChase()
+    public void StopChase()
 	{
 		pathFinder.isStopped = true;
 		pathFinder.SetDestination (transform.position);
 	}
 
-    void Chase(Vector3 target)
-    {
-        pathFinder.SetDestination(target);
+    public void StartChase(GameObject target){
+		pathFinder.SetDestination(target.transform.position);
         pathFinder.isStopped = false;
     }
-
-	/*
-	void OnTriggerEnter(Collider other) {
-		//print (gameObject.name);
-		print ("Enemy: OnTriggerEnter"+ other.name);
-		var player = other.GetComponent<Player> ();
-		if (player != null) {
-			transform.position = player.GetCol ().ClosestPointOnBounds (transform.position);
-			transform.position += (transform.position - player.transform.position).normalized * capsCol.radius;
-		}
-	}*/
 
 	void LateUpdate(){
 		MoveOut ();
