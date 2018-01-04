@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(CharacterController))]
 public class Player : MonoBehaviour {
-
 	private float dashLength = 6f;   //the max length on each dash
 	private float dashDuration = 0.5f; //time to spend on each dash
 	private float dashDamage = 30;
@@ -13,25 +13,22 @@ public class Player : MonoBehaviour {
 	private Vector3 dashStartPos;
 	private Vector3 dashTargetPos;
 	private bool isDashGliding = false;
+	private HashSet<Enemy> dashDamagedEnemies = new HashSet<Enemy> ();
+
 	private bool isControllable = true;
 
-	private float moveSpeed = 0.1f;
+	private float moveSpeed = 4f; //for moving with mouseHold
     private Vector3 moveDir;
-
-
     
     public GameObject afterShadowCloneOfDash;
     
     private float gravity = .3f;
 
-
-    private CapsuleCollider capsCol;
     private CharacterController charCtrl;
 
     // Use this for initialization
     void Start () {
         charCtrl = GetComponent<CharacterController>();
-        capsCol = GetComponent<CapsuleCollider>();
 	}
 	
 	// Update is called once per frame
@@ -49,10 +46,20 @@ public class Player : MonoBehaviour {
         }
     }
 
-	public void IsSwiped(Vector3 dir){ // is called once when user swypes
+	public void OnSwipe(Vector3 dir){ // is called once when user swipes
+		print("Swiped");
 		if (isControllable)
 			StartDashing(SwipeDirToDashDir(dir));
 	}
+	public void OnMouseHold(){
+		transform.LookAt (MouseToPlayerHorPlanePos ()+Vector3.up * charCtrl.height / 2);
+		if(isControllable){
+			charCtrl.Move((MouseToPlayerHorPlanePos() + Vector3.up * charCtrl.height / 2 - transform.position).normalized*moveSpeed*Time.deltaTime);
+		}
+		//MouseToPlayerHorPlanePos()
+	}
+		
+
 
     private Vector3 SwipeDirToDashDir(Vector2 swipeDir)
     {
@@ -101,19 +108,24 @@ public class Player : MonoBehaviour {
 		isControllable = true;
         isDashGliding = false;
 		dashTimeSpent = 0;
+		dashDamagedEnemies.Clear ();
+		//print ("done dashing");
     }
-
 
     void OnTriggerEnter(Collider other)
     {
 		var enemy = other.gameObject.GetComponent<Enemy> ();
-        if (enemy != null)
-        {
-            if (isDashGliding)
-            {
-                InflictDamage(enemy);
-            }
-        }
+		if (enemy != null) {
+			if (Vector3.Angle (dashTargetPos - dashStartPos, enemy.transform.position - transform.position) <= 90) {
+				if (IsDashing ()) {
+					if (!dashDamagedEnemies.Contains (enemy)) {
+						dashDamagedEnemies.Add (enemy);
+						InflictDamage (enemy);
+						print ("Player dashed through " + other.name);
+					}
+				}
+			}
+		}
     }
 
     private void InflictDamage(Enemy target) {
@@ -121,14 +133,6 @@ public class Player : MonoBehaviour {
     }
 
    
-    private Vector3 GetMoveDir()
-    {
-        Vector3 pos = transform.position;
-        Vector3 hitPoint = MouseToPlayerHorPlanePos();
-        Vector3 moveTarget = new Vector3(hitPoint.x, pos.y, hitPoint.z);
-        return (moveTarget - pos).normalized;
-    }
-
     private Vector3 MouseToPlayerHorPlanePos()
     {
         Vector3 hitPoint = Vector3.zero;
@@ -144,16 +148,13 @@ public class Player : MonoBehaviour {
         }
         return hitPoint;
     }
-    private void Move()
+
+    public CharacterController GetCol()
     {
-        moveDir = GetMoveDir();
-        charCtrl.Move(moveDir * moveSpeed);
-        transform.LookAt(transform.position + moveDir);
+		return GetComponent<CharacterController> ();
     }
 
-    public CapsuleCollider GetCapsCol()
-    {
-        return capsCol;
-    }
-
+	public bool IsDashing(){
+		return isDashGliding;
+	}
 }
