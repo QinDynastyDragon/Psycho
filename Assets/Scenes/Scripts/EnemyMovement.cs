@@ -3,25 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+[RequireComponent(typeof(Enemy))]
 public class EnemyMovement : MonoBehaviour {
 
     private NavMeshAgent pathFinder;
-    public Player player;
+	private Transform chaseTarget;
     private CapsuleCollider capsCol;
-    private float provocRange = 10;
- 
+	private Enemy thisEnemy;
+	private bool isTargetPlayer = false;
   
 	// Use this for initialization
 	void Start () {
+		thisEnemy = GetComponent<Enemy> ();
+		chaseTarget = thisEnemy.chaseTarget.transform;
         pathFinder = GetComponent<NavMeshAgent>();
-        //targetPlayer = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
-        capsCol = GetComponent<CapsuleCollider>();    
+		capsCol = GetComponent<CapsuleCollider>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if ((player.transform.position - transform.position).magnitude <= provocRange) {
-			pathFinder.SetDestination (player.transform.position);
+		if ((chaseTarget.position - transform.position).magnitude <= thisEnemy.chaseProvocRadius) {
+			pathFinder.SetDestination (chaseTarget.position);
 		} else {
 			pathFinder.SetDestination (transform.position);
 		}
@@ -37,6 +39,7 @@ public class EnemyMovement : MonoBehaviour {
     public void StartChase(GameObject target){
 		pathFinder.SetDestination(target.transform.position);
         pathFinder.isStopped = false;
+		isTargetPlayer = (bool)target.GetComponent<Player> ();
     }
 
 	void LateUpdate(){
@@ -48,8 +51,10 @@ public class EnemyMovement : MonoBehaviour {
 	}
 
 	void MoveOut(){
+		if (!isTargetPlayer)
+			return;
 		//move out of the collider of player.
-
+		var player = chaseTarget.GetComponent<Player>();
 		//if player is dashing, let player get through
 		if (player.IsDashing())
 			return;

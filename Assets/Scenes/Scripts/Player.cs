@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class Player : MonoBehaviour {
+public class Player : MonoBehaviour, IDamagable {
 	private float dashLength = 6f;   //the max length on each dash
 	private float dashDuration = 0.5f; //time to spend on each dash
 	private float dashDamage = 30;
@@ -17,7 +17,7 @@ public class Player : MonoBehaviour {
 
 	private bool isControllable = true;
 
-	private float moveSpeed = 4f; //for moving with mouseHold
+	private float moveSpeed = 7f; //for moving with mouseHold
     private Vector3 moveDir;
     
     public GameObject afterShadowCloneOfDash;
@@ -26,7 +26,13 @@ public class Player : MonoBehaviour {
 
     private CharacterController charCtrl;
 
+	//UI
+	public UIManager uIManager;
+
+
     void Start () {
+		StartHealth = 1000f;
+		Health = StartHealth;
         charCtrl = GetComponent<CharacterController>();
     }
 
@@ -41,10 +47,6 @@ public class Player : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.Space)) {
             InstantiateAfterShadow();
             StartDashing((MouseToPlayerHorPlanePos() + Vector3.up * charCtrl.height / 2 - transform.position).normalized);
-        }
-
-        if (Input.GetMouseButton(0)){
-            OnMouseHold();
         }
     }
 
@@ -117,17 +119,13 @@ public class Player : MonoBehaviour {
 				if (IsDashing ()) {
 					if (!dashDamagedEnemies.Contains (enemy)) {
 						dashDamagedEnemies.Add (enemy);
-						InflictDamage (enemy);
+						enemy.ReceivedDamage (dashDamage);
 						enemy.KnockBack((dashTargetPos - dashStartPos).normalized);
 						print ("Player dashed through " + other.name);
 					}
 				}
 			}
 		}
-    }
-
-    private void InflictDamage(Enemy target) {
-        target.DecreaseHealth ((int)dashDamage);
     }
 
     private Vector3 MouseToPlayerHorPlanePos()
@@ -154,4 +152,20 @@ public class Player : MonoBehaviour {
 	public bool IsDashing(){
 		return isDashGliding;
 	}
+
+	#region IDamagable implementation
+	public float StartHealth { get; private set; }
+	public float Health { get; set; }
+	public void ReceivedDamage (float amount) {
+		Health -= amount;
+		if (Health <= 0f) {
+			print ("player is Dead");
+		}
+		uIManager.UpdatePlayerHealthBar (Health / StartHealth);
+	}
+	public bool IsVulnerable (){
+		return !IsDashing ();
+	}
+	#endregion
+
 }
