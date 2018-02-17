@@ -17,7 +17,7 @@ public class Player : MonoBehaviour {
 
 	private bool isControllable = true;
 
-	private float moveSpeed = 4f; //for moving with mouseHold
+	private float moveSpeed = 6f; //for moving with mouseHold
     private Vector3 moveDir;
     
     public GameObject afterShadowCloneOfDash;
@@ -25,6 +25,8 @@ public class Player : MonoBehaviour {
     private float gravity = .3f;
 
     private CharacterController charCtrl;
+
+
 
     void Start () {
         charCtrl = GetComponent<CharacterController>();
@@ -41,10 +43,6 @@ public class Player : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.Space)) {
             InstantiateAfterShadow();
             StartDashing((MouseToPlayerHorPlanePos() + Vector3.up * charCtrl.height / 2 - transform.position).normalized);
-        }
-
-        if (Input.GetMouseButton(0)){
-            OnMouseHold();
         }
     }
 
@@ -125,6 +123,16 @@ public class Player : MonoBehaviour {
 			}
 		}
     }
+
+    void OnControllerColliderHit(ControllerColliderHit cubes)
+    {
+        if(cubes.gameObject.tag == "Sokoblock")
+        {
+            var sokoblock = cubes.gameObject.GetComponent<SokoBlock>();
+            Debug.Log("hit the block");
+            sokoblock.Pushed();
+        }
+    } 
 
     private void InflictDamage(Enemy target) {
         target.DecreaseHealth ((int)dashDamage);
